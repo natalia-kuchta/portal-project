@@ -115,6 +115,8 @@
 //     composer.setSize(window.innerWidth, window.innerHeight);
 // });
 
+
+
 import * as THREE from 'three';
 import { createBloomEffect } from './bloomEffect.js';
 
@@ -156,7 +158,7 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // 🌀 Shaderowy portal (okrągły z zasysaniem i wirowaniem)
+    //  Shaderowy portal (okrągły z zasysaniem i wirowaniem)
     const portalMaterial = new THREE.ShaderMaterial({
         uniforms: {
             uTime: { value: 0.0 },
@@ -221,7 +223,7 @@ void main() {
         const intersects = raycaster.intersectObjects([portal]);
 
         if (intersects.length > 0) {
-            console.log("🌀 Portal kliknięty!");
+
             triggerTransition();
         }
     });
@@ -242,9 +244,8 @@ function animate() {
         });
     }
 
-
-
     portal.material.uniforms.uTime.value = elapsed;
+
     if (inCyberpunkWorld) {
         const bubbles = scene.getObjectByName('neonBubbles');
         if (bubbles) {
@@ -307,7 +308,18 @@ function triggerTransition() {
 
 function loadCyberpunkWorld() {
     inCyberpunkWorld = true;
+
+    function clearSceneObjects() {
+        for (let i = scene.children.length - 1; i >= 0; i--) {
+            const obj = scene.children[i];
+            if (obj !== camera) scene.remove(obj);
+        }
+    }
+
+
     clearSceneObjects();
+
+    scene.background = new THREE.Color('#66ccff');
 
 
     function addNeonBubbles() {
@@ -317,40 +329,41 @@ function loadCyberpunkWorld() {
 
         const geometry = new THREE.SphereGeometry(0.15, 32, 32);
         const material = new THREE.MeshPhysicalMaterial({
-            color: new THREE.Color('#ff66cc'), // neon pink
+            color: new THREE.Color('#ff00cc'),
+            emissive: new THREE.Color('#ff00cc'),
+            emissiveIntensity: 4,
             transparent: true,
-            opacity: 0.4,
-            roughness: 0.1,
-            metalness: 0.9,
-            transmission: 1.0,
-            thickness: 1.0,
-            clearcoat: 1.0,
-            clearcoatRoughness: 0
+            opacity: 0.6,
+            roughness: 0.2,
+            metalness: 0.6,
+            // transmission: 1.0,
+            // thickness: 1.0,
+            // clearcoat: 1.0,
+            // clearcoatRoughness: 0
         });
 
         for (let i = 0; i < bubbleCount; i++) {
             const bubble = new THREE.Mesh(geometry, material.clone());
             bubble.position.set(
-                THREE.MathUtils.randFloatSpread(20), // szerzej po X
-                THREE.MathUtils.randFloatSpread(15), // wyżej po Y
-                THREE.MathUtils.randFloatSpread(20)  // głębiej po Z
+                0.2 * THREE.MathUtils.randFloatSpread(20), // szerzej po X
+                0.2 * THREE.MathUtils.randFloatSpread(15), // wyżej po Y
+               0.1 * (THREE.MathUtils.randFloatSpread(20)-10)  // głębiej po Z
             );
             bubble.scale.setScalar(THREE.MathUtils.randFloat(0.4, 1.5));
             bubbleGroup.add(bubble);
         }
 
         scene.add(bubbleGroup);
+        bubblesGroup = bubbleGroup;
+
+        // const light = new THREE.PointLight('#ff00cc', 2, 100);
+        // light.position.set(0, 10, 10);
+        // scene.add(light);
     }
 
     addNeonBubbles();
 
 
-    function clearSceneObjects() {
-        while (scene.children.length > 0) {
-            scene.remove(scene.children[0]);
-        }
-        // composer = null; // opcjonalnie, jeśli chcesz wyczyścić
-    }
 
 
 
