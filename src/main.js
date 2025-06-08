@@ -1,122 +1,3 @@
-// import * as THREE from 'three';
-// import { createBloomEffect } from './bloomEffect.js';
-// // import './styles.css';
-//
-// const scene = new THREE.Scene();
-// scene.fog = new THREE.FogExp2(0x0a1f0a, 0.05); // tajemnicza mgła
-// scene.background = new THREE.Color(0x001122); // pasujące tło
-// scene.background = new THREE.Color(0x000000); // ciemne tło
-//
-// const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 100);
-// camera.position.z = 5;
-//
-// const renderer = new THREE.WebGLRenderer({ antialias: true });
-// renderer.setSize(window.innerWidth, window.innerHeight);
-// document.body.appendChild(renderer.domElement);
-//
-// const geometry = new THREE.SphereGeometry(1, 32, 32);
-// const material = new THREE.MeshStandardMaterial({
-//     color: 0x00ff77,
-//     emissive:  0x00ff77,
-//     emissiveIntensity: 2.5,
-//     roughness: 0.2,
-//     metalness: 0.5,
-// });
-// const sphere = new THREE.Mesh(geometry, material);
-// scene.add(sphere);
-// // Cząsteczki
-// const particlesCount = 500;
-// const particlesGeometry = new THREE.BufferGeometry();
-// const positions = [];
-//
-// for (let i = 0; i < particlesCount; i++) {
-//     const x = (Math.random() - 0.5) * 10;
-//     const y = (Math.random() - 0.5) * 10;
-//     const z = (Math.random() - 0.5) * 10;
-//     positions.push(x, y, z);
-// }
-//
-// particlesGeometry.setAttribute(
-//     'position',
-//     new THREE.Float32BufferAttribute(positions, 3)
-// );
-//
-// const particlesMaterial = new THREE.PointsMaterial({
-//     color: 0x88ccff,
-//     size: 0.05,
-//     transparent: true,
-//     opacity: 0.8,
-// });
-//
-// const particles = new THREE.Points(particlesGeometry, particlesMaterial);
-// scene.add(particles);
-//
-//
-// const composer = createBloomEffect(renderer, scene, camera);
-//
-// let clicked = false;
-// let clickStartTime = 0;
-//
-// window.addEventListener('click', () => {
-//     clicked = true;
-//     clickStartTime = Date.now();
-// });
-//
-// const originalColor = new THREE.Color(0x00ff77);
-// const clickedColor = new THREE.Color(0x00ffcc);
-//
-// let transitionProgress = 0; // od 0 do 1
-// let transitioning = false;
-//
-// window.addEventListener('click', () => {
-//     transitioning = true;
-//     transitionProgress = 0;
-// });
-//
-// function animate() {
-//     requestAnimationFrame(animate);
-//
-//     sphere.rotation.y += 0.01;
-//     particles.rotation.y += 0.002;
-//     particles.rotation.x += 0.001;
-//
-//     sphere.rotation.x += 0.005;
-//     sphere.rotation.z += 0.002;
-//
-//     if (transitioning) {
-//         transitionProgress += 0.02; // szybkość animacji
-//
-//         // lerp kolorów od oryginału do klikniętego i z powrotem (ping-pong)
-//         const t = Math.sin(transitionProgress * Math.PI);
-//
-//         sphere.material.color.lerpColors(originalColor, clickedColor, t);
-//         sphere.material.emissive.lerpColors(originalColor, clickedColor, t);
-//
-//         // pulsacja emisji jasności (od 2.5 do 5)
-//         sphere.material.emissiveIntensity = 2.5 + 2.5 * t;
-//
-//         if (transitionProgress >= 1) {
-//             transitioning = false;
-//             // na koniec przywróć oryginalne kolory i intensywność
-//             sphere.material.color.copy(originalColor);
-//             sphere.material.emissive.copy(originalColor);
-//             sphere.material.emissiveIntensity = 2.5;
-//         }
-//     }
-//
-//     composer.render();
-// }
-// animate();
-//
-// window.addEventListener('resize', () => {
-//     camera.aspect = window.innerWidth / window.innerHeight;
-//     camera.updateProjectionMatrix();
-//     renderer.setSize(window.innerWidth, window.innerHeight);
-//     composer.setSize(window.innerWidth, window.innerHeight);
-// });
-
-
-
 import * as THREE from 'three';
 import { createBloomEffect } from './bloomEffect.js';
 
@@ -124,7 +5,7 @@ let scene, camera, renderer, portal, composer;
 let clock = new THREE.Clock();
 let animating = false;
 let startTime = 0;
-const animationDuration = 2; // sekundy
+const animationDuration = 2;
 
 let inCyberpunkWorld = false;
 let fadePlane;
@@ -136,7 +17,7 @@ animate();
 
 
 function init() {
-    // 🌌 Scena + kamera
+
     scene = new THREE.Scene();
     // scene.background = new THREE.Color(0x000000);
     // scene.fog = new THREE.FogExp2(0x0a1f0a, 0.08);
@@ -148,9 +29,9 @@ function init() {
         transparent: true,
         opacity: 0
     });
-    const fadeGeometry = new THREE.PlaneGeometry(10, 10); // większy niż ekran
+    const fadeGeometry = new THREE.PlaneGeometry(10, 10);
     fadePlane = new THREE.Mesh(fadeGeometry, fadeMaterial);
-    fadePlane.position.z = 0.1; // przed portalem
+    fadePlane.position.z = 0.1;
     scene.add(fadePlane);
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -158,7 +39,7 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    //  Shaderowy portal (okrągły z zasysaniem i wirowaniem)
+    // Shaders portal
     const portalMaterial = new THREE.ShaderMaterial({
         uniforms: {
             uTime: { value: 0.0 },
@@ -188,13 +69,12 @@ void main() {
     uv = vec2(cos(angle), sin(angle)) * dist * suck;
     uv += 0.5;
 
-    // Dynamiczna zmiana kolorów
-    vec3 colorStart = vec3(0.1, 1.0, 0.7);  // startowy neonowy
-    vec3 colorMid = vec3(0.5, 0.0, 0.3);    // różowo-fioletowy
-    vec3 colorDark = vec3(0.0);             // czarny
+    vec3 colorStart = vec3(0.1, 1.0, 0.7);  
+    vec3 colorMid = vec3(0.5, 0.0, 0.3);    
+    vec3 colorDark = vec3(0.0);             
 
     vec3 baseColor = mix(colorStart, colorMid, uProgress * 0.7);
-    baseColor = mix(baseColor, colorDark, pow(uProgress, 2.0)); // stopniowe przyciemnianie
+    baseColor = mix(baseColor, colorDark, pow(uProgress, 2.0)); 
 
     float glow = 1.0 - smoothstep(0.2, 0.6, dist);
 
@@ -204,14 +84,14 @@ void main() {
         transparent: true
     });
 
-    const portalGeometry = new THREE.CircleGeometry(2, 128); // okrąg, gładki
+    const portalGeometry = new THREE.CircleGeometry(2, 128);
     portal = new THREE.Mesh(portalGeometry, portalMaterial);
-    portal.position.z = -5 // ustaw pionowo
+    portal.position.z = -5
     scene.add(portal);
 
     composer = createBloomEffect(renderer, scene, camera);
 
-    // 🖱 Kliknięcie w portal
+
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -253,7 +133,7 @@ function animate() {
             bubbles.children.forEach((bubble, i) => {
                 const scale = 0.8 + Math.sin(time * 2 + i) * 0.1;
                 bubble.scale.setScalar(scale);
-                bubble.position.y += Math.sin(time + i) * 0.002; // lekki dryf w górę
+                bubble.position.y += Math.sin(time + i) * 0.002;
             });
         }
     }
@@ -266,9 +146,9 @@ function animate() {
 
         fadePlane.material.opacity = Math.max(0, (progress - 0.7) / 0.3);
 
-        // Dodatkowo: kamera zasysana!
+
         camera.position.z = 5 - 4 * Math.pow(progress, 1.5);
-        portal.scale.setScalar(1 + progress * 3); // rośnie z czasem
+        portal.scale.setScalar(1 + progress * 3);
 
         if (progress >= 1.0) {
             animating = false;
@@ -277,9 +157,9 @@ function animate() {
     }
 
     if (inCyberpunkWorld) {
-        renderer.render(scene, camera); // zamiast efektów bloom
+        renderer.render(scene, camera);
     } else {
-        composer.render(); // efekt bloom tylko w świecie portalu
+        composer.render();
     }
 
     if (inCyberpunkWorld) {
@@ -289,7 +169,7 @@ function animate() {
             const positions = particles.geometry.attributes.position;
             for (let i = 0; i < positions.count; i++) {
                 const y = positions.getY(i);
-                positions.setY(i, y + Math.sin(time + i) * 0.0015); // dryf
+                positions.setY(i, y + Math.sin(time + i) * 0.0015);
             }
             positions.needsUpdate = true;
         }
@@ -323,7 +203,7 @@ function loadCyberpunkWorld() {
 
 
     function addNeonBubbles() {
-        const bubbleCount = 200;
+        const bubbleCount = 100;
          const bubbleGroup = new THREE.Group();
         bubbleGroup.name = 'neonBubbles';
 
@@ -345,9 +225,9 @@ function loadCyberpunkWorld() {
         for (let i = 0; i < bubbleCount; i++) {
             const bubble = new THREE.Mesh(geometry, material.clone());
             bubble.position.set(
-                0.2 * THREE.MathUtils.randFloatSpread(20), // szerzej po X
-                0.2 * THREE.MathUtils.randFloatSpread(15), // wyżej po Y
-               0.1 * (THREE.MathUtils.randFloatSpread(20)-10)  // głębiej po Z
+                0.2 * THREE.MathUtils.randFloatSpread(20),
+                0.2 * THREE.MathUtils.randFloatSpread(15),
+               0.1 * (THREE.MathUtils.randFloatSpread(20)-10)
             );
             bubble.scale.setScalar(THREE.MathUtils.randFloat(0.4, 1.5));
             bubbleGroup.add(bubble);
@@ -364,10 +244,6 @@ function loadCyberpunkWorld() {
     addNeonBubbles();
 
 
-
-
-
-    // 📸 Ustaw kamerę prosto
     camera.position.set(0, 0, 1);
     camera.lookAt(0, 0, 0);
 
@@ -375,11 +251,11 @@ function loadCyberpunkWorld() {
     loader.load('/cyberpunk.png', function (texture) {
         texture.minFilter = THREE.NearestFilter;
         texture.magFilter = THREE.NearestFilter;
-        texture.anisotropy = renderer.capabilities.getMaxAnisotropy(); // dla ostrości
+        texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
         texture.needsUpdate = true;
 
         const aspect = window.innerWidth / window.innerHeight;
-        const height = 2; // dowolna wysokość (np. 2 jednostki w przestrzeni świata)
+        const height = 2;
         const width = height * aspect;
 
         window.addEventListener('resize', () => {
@@ -392,17 +268,17 @@ function loadCyberpunkWorld() {
             renderer.setSize(window.innerWidth, window.innerHeight);
 
             if (mesh) {
-                mesh.geometry.dispose(); // czyścimy starą geometrię
+                mesh.geometry.dispose();
                 mesh.geometry = new THREE.PlaneGeometry(width, height);
             }
         });
 
-        // Stwórz materiał z obrazkiem
+
         const material = new THREE.MeshBasicMaterial({ map: texture });
-        const geometry = new THREE.PlaneGeometry(width, height); // fullscreen quad
+        const geometry = new THREE.PlaneGeometry(width, height);
         const mesh = new THREE.Mesh(geometry, material);
 
-        // umieść przed kamerą (Z < kamera Z)
+
         mesh.position.z = -1;
 
         scene.add(mesh);
